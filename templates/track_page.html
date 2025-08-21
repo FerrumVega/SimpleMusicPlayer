@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <title>{{ song_full_name }}</title>
+</head>
+
+<body>
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h1>{{ song_full_name }}</h1>
+        <figure>
+            <audio controls src="{{ song_url }}" preload="metadata"></audio>
+        </figure>
+        <a href="{{ previous_track_url }}">
+            <button type="button">
+                Предыдущий трек
+            </button>
+        </a>
+        <a href="{{ next_track_url }}">
+            <button type="button">
+                Следующий трек
+            </button>
+        </a>
+        <a href="/">
+            <button type="button">
+                На главную
+            </button>
+        </a>
+    </div>
+</body>
+
+</html>
