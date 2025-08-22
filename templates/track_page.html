@@ -2,15 +2,74 @@
 <html lang="ru">
 
 <head>
+    <meta charset="UTF-8">
     <title>{{ song_full_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            min-height: 100vh;
+            font-family: "Arial", sans-serif;
+            font-weight: bold;
+        }
+
+        .theme-dark {
+            background: black;
+            color: #81e8b6;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+
+        audio {
+            min-width: 100% !important;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        button {
+            background-color: black;
+            color: #81e8b6;
+            margin: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            color: #00f2ea;
+            text-shadow: 0 0 5px #00f2ea;
+        }
+    </style>
 </head>
 
-<body>
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+<body class="theme-dark">
+    <div class="container">
         <h1>{{ song_full_name }}</h1>
-        <figure>
-            <audio controls src="{{ song_url }}" preload="metadata"></audio>
-        </figure>
+        <img src="{{ song_cover }}"></img>
+        <audio controls src="{{ song_url }}" preload="metadata"></audio>
+    </div>
+    <div class="buttons">
+        <a href="like">
+            <button type="button">
+                ❤️
+            </button>
+        </a>
+        <a href="dislike">
+            <button type="button">
+                💔
+            </button>
+        </a>
         <a href="{{ previous_track_url }}">
             <button type="button">
                 Предыдущий трек
@@ -26,6 +85,9 @@
                 На главную
             </button>
         </a>
+    </div>
+    <div class="container">
+        <p>{{ song_lyrics|safe }}</p>
     </div>
 </body>
 

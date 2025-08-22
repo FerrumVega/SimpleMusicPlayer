@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleMusicPlayer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            min-height: 100vh;
+            font-family: "Arial", sans-serif;
+            font-weight: bold;
+        }
+
+        .theme-dark {
+            background: black;
+            color: #81e8b6;
+        }
+
+        div {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        a {
+            color: #81e8b6;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #00f2ea;
+            text-shadow: 0 0 5px #00f2ea;
+        }
+
+        button {
+            background-color: black;
+            color: #81e8b6;
+            margin: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        input {
+            background-color: black;
+            color: #81e8b6;
+            margin: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="theme-dark">
+    <div>
+        <search>
+            <form action="/search" method="GET">
+                <input type="search" name="q" placeholder="Введите текст для поиска">
+                <button type="submit">Найти</button>
+            </form>
+        </search>
+        {{ tracks_names|safe }}
+    </div>
+</body>
+
+</html>
