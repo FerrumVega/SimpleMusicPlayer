@@ -5,61 +5,14 @@
     <meta charset="UTF-8">
     <title>{{ song_full_name }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            min-height: 100vh;
-            font-family: "Arial", sans-serif;
-            font-weight: bold;
-        }
-
-        .theme-dark {
-            background: black;
-            color: #81e8b6;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-
-        }
-
-        .buttons {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-        }
-
-        audio {
-            min-width: 100% !important;
-            margin-top: 50px;
-            margin-bottom: 50px;
-        }
-
-        button {
-            background-color: black;
-            color: #81e8b6;
-            margin: 10px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            color: #00f2ea;
-            text-shadow: 0 0 5px #00f2ea;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body class="theme-dark">
-    <div class="container">
+    <div>
         <h1>{{ song_full_name }}</h1>
-        <img src="{{ song_cover }}"></img>
-        <audio controls src="{{ song_url }}" preload="metadata"></audio>
-    </div>
-    <div class="buttons">
+        <img src="{{ song_cover }}" class="bouncing-img"></img>
+        <audio controls src="{{ song_url }}" preload="metadata" id="player"></audio>
         <a href="like">
             <button type="button">
                 ❤️
@@ -76,7 +29,7 @@
             </button>
         </a>
         <a href="{{ next_track_url }}">
-            <button type="button">
+            <button type="button" id="next_button">
                 Следующий трек
             </button>
         </a>
@@ -85,10 +38,33 @@
                 На главную
             </button>
         </a>
-    </div>
-    <div class="container">
         <p>{{ song_lyrics|safe }}</p>
     </div>
+    <script>
+        let player = document.getElementById("player")
+        let img = document.querySelector(".bouncing-img")
+        player.addEventListener("play", () => { img.style.animation = "bouncing 7s infinite"; })
+        player.addEventListener("pause", () => { img.style.animation = "none"; })
+        if (new URLSearchParams(window.location.search).has("from_wave")) {
+            let trackId = window.location.pathname.split("/")[2]
+            let listened = false
+            player.addEventListener("timeupdate", () => {
+                let playerPos = player.currentTime
+                if (playerPos / player.duration >= 0.8 && !listened) {
+                    navigator.sendBeacon(`/feedback/ended/?player_pos=${playerPos}&track_id=${trackId}`)
+                    listened = true
+                }
+            })
+
+            let next_button = document.getElementById("next_button")
+            next_button.addEventListener("click", () => {
+                if (!listened) {
+                    let playerPos = player.currentTime
+                    navigator.sendBeacon(`/feedback/skipped/?player_pos=${playerPos}&track_id=${trackId}`)
+                }
+            })
+        }
+    </script>
 </body>
 
 </html>

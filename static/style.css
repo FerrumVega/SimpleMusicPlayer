@@ -1,0 +1,78 @@
+@keyframes bouncing {
+
+    0%,
+    25% {
+        transform: translateY(0);
+    }
+
+    15% {
+        transform: translateY(-20px);
+    }
+}
+
+body {
+    min-height: 100vh;
+    font-family: "Arial", sans-serif;
+    font-weight: bold;
+}
+
+.theme-dark {
+    background: black;
+    color: #81e8b6;
+    background-color: black;
+    background-image: url("https://www.transparenttextures.com/patterns/axiom-pattern.png");
+}
+
+div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.bouncing-img {
+    box-shadow: 10px 10px 20px rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    animation: none;
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+a {
+    color: #81e8b6;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+audio {
+    min-width: 100% !important;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+a:hover {
+    color: #11e8b6;
+    text-shadow: 0 0 5px #11e8b6;
+}
+
+button {
+    background-color: black;
+    color: #81e8b6;
+    margin: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+button:hover {
+    color: #11e8b6;
+    text-shadow: 0 0 5px #11e8b6;
+}
+
+input {
+    background-color: black;
+    color: #81e8b6;
+    margin: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
