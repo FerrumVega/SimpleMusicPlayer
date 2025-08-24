@@ -11,7 +11,7 @@
 <body class="theme-dark">
     <div>
         <h1>{{ song_full_name }}</h1>
-        <img src="{{ song_cover }}" class="bouncing-img"></img>
+        <img src="{{ song_cover }}" class="spinning-img"></img>
         <audio controls src="{{ song_url }}" preload="metadata" id="player"></audio>
         <button type="button" id="like">
             ❤️
@@ -38,8 +38,8 @@
     </div>
     <script>
         let player = document.getElementById("player")
-        let img = document.querySelector(".bouncing-img")
-        player.addEventListener("play", () => { img.style.animation = "bouncing 4s infinite"; })
+        let img = document.querySelector(".spinning-img")
+        player.addEventListener("play", () => { img.style.animation = "spinning 10s linear infinite"; })
         player.addEventListener("pause", () => { img.style.animation = "none"; })
 
         if (new URLSearchParams(window.location.search).get("from_wave") === "true") {

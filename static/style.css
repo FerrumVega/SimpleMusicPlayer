@@ -1,14 +1,11 @@
-@keyframes bouncing {
+@keyframes spinning {
 
-    0%,
-    50% {
-        transform: translateY(0);
-        animation-timing-function: ease-out;
+    0% {
+        transform: rotate(0deg);
     }
 
-    25% {
-        transform: translateY(-20px);
-        animation-timing-function: ease-in;
+    100% {
+        transform: rotate(360deg);
     }
 }
 
@@ -32,9 +29,7 @@ div {
     align-items: center;
 }
 
-.bouncing-img {
-    box-shadow: 10px 10px 20px rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+.spinning-img {
     animation: none;
     width: 200px;
     height: 200px;
