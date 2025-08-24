@@ -1,12 +1,14 @@
 @keyframes bouncing {
 
     0%,
-    25% {
+    50% {
         transform: translateY(0);
+        animation-timing-function: ease-out;
     }
 
-    15% {
+    25% {
         transform: translateY(-20px);
+        animation-timing-function: ease-in;
     }
 }
 
