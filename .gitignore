@@ -208,6 +208,5 @@ __marimo__/
 
 
 config.py
-*.mp3
-*.aac
-*.png
+/static/covers
+/static/tracks
