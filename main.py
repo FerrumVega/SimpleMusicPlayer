@@ -160,6 +160,7 @@ def create_app():
         if not os.path.isfile(cover_path):
             cover = Image.open(io.BytesIO(track_info.download_cover_bytes("1080x1080")))
             disk_mask = Image.open("static/disk_mask.png").convert("L")
+            disk_mask = disk_mask.resize(cover.size)
             result = Image.new("RGBA", cover.size, (0, 0, 0, 0))
             result.paste(cover, (0, 0), mask=disk_mask)
             result.save(cover_path)
