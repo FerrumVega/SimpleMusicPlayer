@@ -12,11 +12,34 @@
     <div>
         <h1>{{ song_full_name }}</h1>
         <img src="{{ song_cover }}" class="spinning-img"></img>
-        <audio controls src="{{ song_url }}" preload="metadata" id="player"></audio>
-        <button type="button" id="like">
+        <audio controls src="{{ song_url }}" preload="metadata" id="player"
+            onplay="document.querySelector('.spinning-img').style.animation = 'spinning 10s linear infinite';"
+            onpause="document.querySelector('.spinning-img').style.animation = 'none';" ontimeupdate="
+                if (new URLSearchParams(window.location.search).get('from_wave') === 'true') {
+                    let playerPos = player.currentTime;
+                    if (playerPos / player.duration >= 0.8 && !listened) {
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', `/feedback/ended/?player_pos=${playerPos}&track_id=${trackId}`, true);
+                        xhr.onload = function() {console.log(xhr.status)};
+                        xhr.send();
+                        listened = true;
+                    }
+                }
+            "></audio>
+        <button type="button" id="like" onclick="{
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'like', true);
+            xhr.onload = function() {console.log(xhr.status)};
+            xhr.send();
+        }">
             ❤️
         </button>
-        <button type="button" id="dislike">
+        <button type="button" id="dislike" onclick="{
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'dislike', true);
+            xhr.onload = function() {console.log(xhr.status)};
+            xhr.send();
+        }">
             💔
         </button>
         <a href="{{ previous_track_url }}">
@@ -25,7 +48,13 @@
             </button>
         </a>
         <a href="{{ next_track_url }}">
-            <button type="button" id="next_track_button">
+            <button type="button" onclick="if (!listened) {
+                    let playerPos = player.currentTime;
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', `/feedback/skipped/?player_pos=${playerPos}&track_id=${trackId}`, true);
+                    xhr.onload = function() {console.log(xhr.status)};
+                    xhr.send();
+                }">
                 Следующий трек
             </button>
         </a>
@@ -35,37 +64,15 @@
             </button>
         </a>
         <p>{{ song_lyrics|safe }}</p>
+        <p>Страница может содержать нежелательный контент. Метка <strong>[E]</strong> в названии трека означает, что он
+            содержит контент для взрослых. Автор не несет ответственности за любой контент, размещенный на сайте.</p>
     </div>
     <script>
-        let player = document.getElementById("player")
-        let img = document.querySelector(".spinning-img")
-        player.addEventListener("play", () => { img.style.animation = "spinning 10s linear infinite"; })
-        player.addEventListener("pause", () => { img.style.animation = "none"; })
-
         if (new URLSearchParams(window.location.search).get("from_wave") === "true") {
-            let trackId = window.location.pathname.split("/")[2]
-            let listened = false
-            player.addEventListener("timeupdate", () => {
-                let playerPos = player.currentTime
-                if (playerPos / player.duration >= 0.8 && !listened) {
-                    navigator.sendBeacon(`/feedback/ended/?player_pos=${playerPos}&track_id=${trackId}`)
-                    listened = true
-                }
-            })
-
-            let next_track_button = document.getElementById("next_track_button")
-            next_track_button.addEventListener("click", () => {
-                if (!listened) {
-                    let playerPos = player.currentTime
-                    navigator.sendBeacon(`/feedback/skipped/?player_pos=${playerPos}&track_id=${trackId}`)
-                }
-            })
+            var trackId = window.location.pathname.split("/")[2]
+            var listened = false
         }
-
-        let like_button = document.getElementById("like")
-        like_button.addEventListener("click", () => { navigator.sendBeacon("like") })
-        let dislike_button = document.getElementById("dislike")
-        dislike_button.addEventListener("click", () => { navigator.sendBeacon("dislike") })
+        navigator.mediaSession.metadata = new MediaMetadata({ title: '{{ song_title }}', artist: '{{ song_artists }}', artwork: [{ src: '{{ song_cover }}', sizes: '1080x1080', type: 'image/png' }] })
     </script>
 </body>
 
