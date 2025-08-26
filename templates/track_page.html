@@ -12,34 +12,11 @@
     <div>
         <h1>{{ song_full_name }}</h1>
         <img src="{{ song_cover }}" class="spinning-img"></img>
-        <audio controls src="{{ song_url }}" preload="metadata" id="player"
-            onplay="document.querySelector('.spinning-img').style.animation = 'spinning 10s linear infinite';"
-            onpause="document.querySelector('.spinning-img').style.animation = 'none';" ontimeupdate="
-                if (new URLSearchParams(window.location.search).get('from_wave') === 'true') {
-                    let playerPos = player.currentTime;
-                    if (playerPos / player.duration >= 0.8 && !listened) {
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('POST', `/feedback/ended/?player_pos=${playerPos}&track_id=${trackId}`, true);
-                        xhr.onload = function() {console.log(xhr.status)};
-                        xhr.send();
-                        listened = true;
-                    }
-                }
-            "></audio>
-        <button type="button" id="like" onclick="{
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'like', true);
-            xhr.onload = function() {console.log(xhr.status)};
-            xhr.send();
-        }">
+        <audio controls src="{{ song_url }}" preload="metadata" id="player"></audio>
+        <button type="button" id="like">
             ❤️
         </button>
-        <button type="button" id="dislike" onclick="{
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'dislike', true);
-            xhr.onload = function() {console.log(xhr.status)};
-            xhr.send();
-        }">
+        <button type="button" id="dislike">
             💔
         </button>
         <a href="{{ previous_track_url }}">
@@ -48,13 +25,7 @@
             </button>
         </a>
         <a href="{{ next_track_url }}">
-            <button type="button" onclick="if (!listened) {
-                    let playerPos = player.currentTime;
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('POST', `/feedback/skipped/?player_pos=${playerPos}&track_id=${trackId}`, true);
-                    xhr.onload = function() {console.log(xhr.status)};
-                    xhr.send();
-                }">
+            <button type="button" id="next_track_button">
                 Следующий трек
             </button>
         </a>
@@ -68,11 +39,45 @@
             содержит контент для взрослых. Автор не несет ответственности за любой контент, размещенный на сайте.</p>
     </div>
     <script>
-        if (new URLSearchParams(window.location.search).get("from_wave") === "true") {
-            var trackId = window.location.pathname.split("/")[2]
-            var listened = false
+        function sendFeedback(url, showAlert) {
+            var feedback = new XMLHttpRequest()
+            feedback.open("POST", url, true)
+            feedback.send()
+            if (showAlert) { feedback.onload = function () { alert(feedback.responseText) } }
         }
-        navigator.mediaSession.metadata = new MediaMetadata({ title: '{{ song_title }}', artist: '{{ song_artists }}', artwork: [{ src: '{{ song_cover }}', sizes: '1080x1080', type: 'image/png' }] })
+
+        window.addEventListener("load", function () {
+            var img = document.querySelector(".spinning-img")
+            var player = document.getElementById("player")
+            player.addEventListener("play", function () { img.style.animation = "spinning 10s linear infinite" })
+            player.addEventListener("pause", function () { img.style.animation = "none" })
+
+            if (window.location.search.indexOf("from_wave=true") !== -1) {
+                var trackId = window.location.pathname.split("/")[2]
+                var listened = false
+                player.addEventListener("timeupdate", function () {
+                    var playerPos = player.currentTime
+                    if (playerPos / player.duration >= 0.8 && !listened && !isNaN(player.duration)) {
+                        listened = true
+                        sendFeedback('/feedback/ended/?player_pos=' + playerPos + '&track_id=' + trackId, false)
+                    }
+                })
+                var next_track_button = document.getElementById("next_track_button")
+                next_track_button.addEventListener("click", function () {
+                    if (!listened) {
+                        var playerPos = player.currentTime
+                        sendFeedback('/feedback/skipped/?player_pos=' + playerPos + '&track_id=' + trackId, false)
+                    }
+                })
+            }
+
+
+
+            var like_button = document.getElementById("like")
+            like_button.addEventListener("click", function () { sendFeedback("like", true); })
+            var dislike_button = document.getElementById("dislike")
+            dislike_button.addEventListener("click", function () { sendFeedback("dislike", true); })
+        });
     </script>
 </body>
 

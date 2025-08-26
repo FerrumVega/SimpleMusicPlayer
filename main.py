@@ -55,14 +55,23 @@ def create_app():
         liked_tracks_ids = update_tracks_from_likes()[1]
         if type == "like":
             if track_id in liked_tracks_ids:
-                client.users_likes_tracks_remove(track_id)
+                if client.users_likes_tracks_remove(track_id):
+                    return "Вы убрали лайк с трека", 200
+                else:
+                    return "Произошла ошибка", 500
             else:
-                client.tracks(track_id)[0].like()
+                if client.tracks(track_id)[0].like():
+                    return "Вы поставили лайк треку", 200
+                else:
+                    return "Произошла ошибка", 500
         elif type == "dislike":
-            client.tracks(track_id)[0].dislike()
-            client.users_likes_tracks_remove(track_id)
+            if client.tracks(track_id)[
+                0
+            ].dislike() and client.users_likes_tracks_remove(track_id):
+                return 'Вы поставили "не нравится" треку'
+            else:
+                return "Произошла ошибка", 500
         liked_tracks_ids = update_tracks_from_likes()[1]
-        return "", 204
 
     @app.route("/feedback/<type>/", methods=["POST"])
     def feedback(type):
