@@ -19,16 +19,14 @@
         <button type="button" id="dislike">
             💔
         </button>
-        <a href="{{ previous_track_url }}">
+        <a href="{{ previous_track_url|safe }}">
             <button type="button">
                 Предыдущий трек
             </button>
         </a>
-        <a href="{{ next_track_url }}">
-            <button type="button" id="next_track_button">
-                Следующий трек
-            </button>
-        </a>
+        <button type="button" id="next_track_button">
+            Следующий трек
+        </button>
         <a href="/">
             <button type="button">
                 На главную
@@ -41,7 +39,7 @@
     <script>
         function sendFeedback(url, showAlert) {
             var feedback = new XMLHttpRequest()
-            feedback.open("POST", url, true)
+            feedback.open("POST", url, false)
             feedback.send()
             if (showAlert) { feedback.onload = function () { alert(feedback.responseText) } }
         }
@@ -49,24 +47,27 @@
         window.addEventListener("load", function () {
             var img = document.querySelector(".spinning-img")
             var player = document.getElementById("player")
+            var next_track_button = document.getElementById("next_track_button")
             player.addEventListener("play", function () { img.style.animation = "spinning 10s linear infinite" })
             player.addEventListener("pause", function () { img.style.animation = "none" })
+            next_track_button.addEventListener("click", function () {
+                window.location.href = "{{ next_track_url|safe }}"
+            })
 
-            if (window.location.search.indexOf("from_wave=true") !== -1) {
+            if (window.location.search.indexOf("wave_name") !== -1) {
                 var trackId = window.location.pathname.split("/")[2]
                 var listened = false
                 player.addEventListener("timeupdate", function () {
                     var playerPos = player.currentTime
                     if (playerPos / player.duration >= 0.8 && !listened && !isNaN(player.duration)) {
                         listened = true
-                        sendFeedback('/feedback/ended/?player_pos=' + playerPos + '&track_id=' + trackId, false)
+                        sendFeedback('/feedback/ended/?player_pos=' + playerPos + '&track_id=' + trackId + '&wave_name=' + new URLSearchParams(window.location.search).get("wave_name"), false)
                     }
                 })
-                var next_track_button = document.getElementById("next_track_button")
                 next_track_button.addEventListener("click", function () {
                     if (!listened) {
                         var playerPos = player.currentTime
-                        sendFeedback('/feedback/skipped/?player_pos=' + playerPos + '&track_id=' + trackId, false)
+                        sendFeedback('/feedback/skipped/?player_pos=' + playerPos + '&track_id=' + trackId + '&wave_name=' + new URLSearchParams(window.location.search).get("wave_name"), false)
                     }
                 })
             }

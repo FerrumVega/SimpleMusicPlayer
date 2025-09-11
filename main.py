@@ -8,6 +8,10 @@ import config
 def create_app():
     app = flask.Flask(__name__)
 
+    @app.route("/favicon.ico")
+    def favicon():
+        return flask.send_from_directory(app.static_folder, "favicon.ico")
+
     def update_tracks_from_likes():
         tracks = client.tracks(
             track_info.id for track_info in client.users_likes_tracks()
@@ -50,8 +54,8 @@ def create_app():
         )
 
     @app.route("/track/<track_id>/<type>", methods=["POST"])
-    def like_track(track_id, type):
-        nonlocal liked_tracks_ids
+    def dislike_like_track(track_id, type):
+        global liked_tracks_ids
         liked_tracks_ids = update_tracks_from_likes()[1]
         if type == "like":
             if track_id in liked_tracks_ids:
@@ -80,46 +84,45 @@ def create_app():
         if player_pos == 0:
             player_pos = 0.1
         track_id = flask.request.args.get("track_id")
+        wave_name = flask.request.args.get("wave_name")
         if type == "ended":
             client.rotor_station_feedback_track_finished(
-                station="user:onyourwave",
+                station=wave_name,
                 track_id=track_id,
                 total_played_seconds=player_pos,
-                batch_id=wave_station.batch_id,
             )
 
         elif type == "skipped":
             client.rotor_station_feedback_skip(
-                station="user:onyourwave",
+                station=wave_name,
                 track_id=track_id,
                 total_played_seconds=player_pos,
-                batch_id=wave_station.batch_id,
             )
         return "", 204
 
     @app.route("/my_wave/")
     def wave():
-        last_track_id = flask.request.args.get("last_track_id")
-        global sorted_tracks_ids, wave_station
+        global current_wave_track, sorted_tracks_ids, wave_station
+        last_track_id = flask.request.args.get("last_track_id", "false")
+        wave_name = flask.request.args.get("wave_name", "false")
+        if wave_name == "user:onyourwave" and "current_wave_track" in globals():
+            return flask.redirect(f"/track/{current_wave_track}?wave_name={wave_name}")
         wave_station = client.rotor_station_tracks(
-            "user:onyourwave",
-            settings2=True,
-            **{"queue": last_track_id} if last_track_id is not None else {},
+            station=wave_name,
+            **{"queue": last_track_id} if last_track_id != "false" else {},
         )
         client.rotor_station_feedback_radio_started(
-            station="user:onyourwave",
-            from_=flask.request.user_agent,
-            batch_id=wave_station.batch_id,
+            station=wave_name, from_=flask.request.user_agent
         )
         sorted_tracks = [full_info.track for full_info in wave_station.sequence]
         sorted_tracks_ids = [str(track_info.id) for track_info in sorted_tracks]
-        return flask.redirect(f"/track/{sorted_tracks_ids[0]}?from_wave=true")
+        return flask.redirect(f"/track/{sorted_tracks_ids[0]}?wave_name={wave_name}")
 
     @app.route("/track/<track_id>/")
     def track_page(track_id):
-        global sorted_tracks, sorted_tracks_ids, wave_station
-        nonlocal liked_tracks_ids
+        global sorted_tracks, sorted_tracks_ids, wave_station, current_wave_track, liked_tracks_ids
         track_info = client.tracks(track_id)[0]
+        liked_tracks_ids = update_tracks_from_likes()[1]
         song_full_name = f"{track_info.title} - {", ".join(track_info.artists_name())}{" [E]" if track_info.content_warning == "explicit" else ""}{" ❤️" if track_id in liked_tracks_ids else ""}"
         song_path = f"static/tracks/{track_info.id}.mp3"
         cover_path = f"static/covers/{track_info.id}.png"
@@ -131,41 +134,42 @@ def create_app():
             lyrics = "Нет текста песни"
         if (
             flask.request.args.get("from_query", "false") == "false"
-            and flask.request.args.get("from_wave", "false") == "false"
+            and flask.request.args.get("wave_name", "false") == "false"
         ):
             sorted_tracks, sorted_tracks_ids = update_tracks_from_likes()
             try:
                 previous_track_url = (
                     f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) - 1]}"
                 )
-            except (ValueError, IndexError):
+            except (ValueError, IndexError, NameError):
                 previous_track_url = ""
             try:
                 next_track_url = (
                     f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) + 1]}"
                 )
-            except (ValueError, IndexError):
+            except (ValueError, IndexError, NameError):
                 next_track_url = ""
-        elif flask.request.args.get("from_query", "false") == "true":
+        elif flask.request.args.get("from_query", "false") != "false":
             previous_track_url = ""
             try:
-                next_track_url = f"/track/{client.tracks_similar(track_id).similar_tracks[1].id}?from_query=true"
-            except (ValueError, IndexError):
+                next_track_url = f"/my_wave?wave_name=track:{track_id}"
+            except (ValueError, IndexError, NameError):
                 next_track_url = ""
-        elif flask.request.args.get("from_wave", "false") == "true":
+        elif (wave_name := flask.request.args.get("wave_name", "false")) != "false":
+            current_wave_track = track_id
             client.rotor_station_feedback_track_started(
-                station="user:onyourwave",
-                track_id=track_id,
-                batch_id=wave_station.batch_id,
+                station=wave_name, track_id=track_id
             )
             try:
-                previous_track_url = f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) - 1]}?from_wave=true"
-            except (ValueError, IndexError):
+                previous_track_url = f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) - 1]}?wave_name={wave_name}"
+            except (ValueError, IndexError, NameError):
                 previous_track_url = ""
             try:
-                next_track_url = f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) + 1]}?from_wave=true"
-            except (ValueError, IndexError):
-                next_track_url = f"/my_wave?last_track_id={track_id}"
+                next_track_url = f"/track/{sorted_tracks_ids[sorted_tracks_ids.index(track_id) + 1]}?wave_name={wave_name}"
+            except (ValueError, IndexError, NameError):
+                next_track_url = (
+                    f"/my_wave?last_track_id={track_id}&wave_name={wave_name}"
+                )
         if not os.path.isfile(song_path):
             track_info.download(song_path)
         if not os.path.isfile(cover_path):
